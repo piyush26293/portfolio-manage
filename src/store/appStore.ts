@@ -98,7 +98,5 @@ export const useAppStore = create<AppState>((set, get) => ({
 export const selectPortfolioComputation = (state: AppState) =>
   computePortfolio({
     trades: state.trades,
-    currentPrices: Object.fromEntries(
-      Object.entries(state.prices).map(([symbol, tick]) => [symbol, tick]),
-    ),
+    currentPrices: state.prices,
   })

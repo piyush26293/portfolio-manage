@@ -27,7 +27,7 @@ export const LoginPage = () => {
           }
         }}
       >
-        <h1 className="mb-4 text-xl font-semibold text-slate-800">Portfolio Manage Login</h1>
+        <h1 className="mb-4 text-xl font-semibold text-slate-800">Portfolio Management Login</h1>
         <label className="mb-3 block text-sm text-slate-600">
           Email
           <input

@@ -192,7 +192,37 @@ describe('computePortfolio', () => {
     })
 
     expect(result.positions).toHaveLength(3)
-    expect(result.totalUnrealizedPnL).toBe(1700)
+    expect(result.totalUnrealizedPnL).toBe(1000)
+  })
+
+
+  it('average cost sell consumption updates realized P/L', () => {
+    const result = computePortfolio({
+      trades: [
+        baseTrade('1', 'EQUITY', 'BUY', 10, 100),
+        baseTrade('2', 'EQUITY', 'BUY', 10, 120, 0, '2026-01-01T11:00:00.000Z'),
+        baseTrade('3', 'EQUITY', 'SELL', 5, 130, 0, '2026-01-01T12:00:00.000Z'),
+      ],
+      costBasisMethod: 'AVERAGE_COST',
+    })
+
+    expect(result.positions[0].quantity).toBe(15)
+    expect(result.positions[0].realizedPnL).toBe(100)
+    expect(result.positions[0].averageCost).toBe(110)
+  })
+
+  it('buy can close an existing short position and realize P/L', () => {
+    const result = computePortfolio({
+      trades: [
+        baseTrade('1', 'OPTIONS', 'SELL', 100, 20),
+        baseTrade('2', 'OPTIONS', 'BUY', 40, 12, 0, '2026-01-01T11:00:00.000Z'),
+      ],
+      allowShortBySegment: { OPTIONS: true },
+    })
+
+    expect(result.positions[0].quantity).toBe(60)
+    expect(result.positions[0].realizedPnL).toBe(320)
+    expect(result.positions[0].isOpen).toBe(true)
   })
 
   it('zero holdings after closing trade', () => {

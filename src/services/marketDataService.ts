@@ -7,8 +7,11 @@ export interface MarketDataProvider {
 
 export class MarketDataService {
   private cache = new Map<string, PriceTick>()
+  private provider?: MarketDataProvider
 
-  constructor(private provider?: MarketDataProvider) {}
+  constructor(provider?: MarketDataProvider) {
+    this.provider = provider
+  }
 
   async getPrice(symbol: string): Promise<PriceTick | null> {
     const cached = this.cache.get(symbol)

@@ -61,14 +61,12 @@ const consumeLots = (
 ): { totalValue: number } => {
   if (costBasisMethod === 'AVERAGE_COST') {
     const avg = averagePrice(lots)
-    let remaining = quantity
-    while (remaining > 0) {
-      const lot = lots[0]
-      if (!lot) throw new Error('Insufficient quantity for lot consumption')
-      const consumed = Math.min(lot.qty, remaining)
-      lot.qty -= consumed
-      remaining -= consumed
-      if (!lot.qty) lots.shift()
+    const openQty = totalQty(lots)
+    if (openQty < quantity) throw new Error('Insufficient quantity for lot consumption')
+    const remainingQty = openQty - quantity
+    lots.length = 0
+    if (remainingQty > 0) {
+      lots.push({ qty: remainingQty, unitPrice: avg })
     }
     return { totalValue: avg * quantity }
   }

@@ -1,0 +1,65 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function userDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function userRole() {
+      return userDoc().data.role;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && userRole() == 'admin';
+    }
+
+    function isAdvisor() {
+      return isAuthenticated() && userRole() == 'advisor';
+    }
+
+    function isClientUser() {
+      return isAuthenticated() && userRole() == 'client';
+    }
+
+    function advisorHasClient(clientId) {
+      return isAdvisor() && clientId in userDoc().data.assignedClientIds;
+    }
+
+    function clientOwns(clientId) {
+      return isClientUser() && userDoc().data.linkedClientId == clientId;
+    }
+
+    match /users/{userId} {
+      allow read, write: if isAdmin() || (isAuthenticated() && request.auth.uid == userId);
+    }
+
+    match /clients/{clientId} {
+      allow read: if isAdmin() || advisorHasClient(clientId) || clientOwns(clientId);
+      allow create, update, delete: if isAdmin() || advisorHasClient(clientId);
+
+      match /portfolios/{portfolioId} {
+        allow read: if isAdmin() || advisorHasClient(clientId) || clientOwns(clientId);
+        allow create, update, delete: if isAdmin() || advisorHasClient(clientId);
+
+        match /instruments/{instrumentId} {
+          allow read: if isAdmin() || advisorHasClient(clientId) || clientOwns(clientId);
+          allow create, update, delete: if isAdmin() || advisorHasClient(clientId);
+        }
+
+        match /trades/{tradeId} {
+          allow read: if isAdmin() || advisorHasClient(clientId) || clientOwns(clientId);
+          allow create, update, delete: if isAdmin() || advisorHasClient(clientId);
+        }
+
+        match /snapshots/{snapshotId} {
+          allow read: if isAdmin() || advisorHasClient(clientId) || clientOwns(clientId);
+          allow create, update, delete: if isAdmin() || advisorHasClient(clientId);
+        }
+      }
+    }
+  }
+}
